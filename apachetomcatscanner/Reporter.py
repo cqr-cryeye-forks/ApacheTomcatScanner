@@ -40,6 +40,7 @@ class Reporter(object):
         self._new_results.append(finding)
 
     def print_new_results(self):
+        list_for_cve_and_description = []
         try:
             for finding in self._new_results:
                 if finding["manager_accessible"]:
@@ -77,12 +78,34 @@ class Reporter(object):
                     cve_list = [cve_colored for cve_colored, cve_content in cve_list]
                     if len(cve_list) != 0:
                         print("  | CVEs: %s" % ', '.join(cve_list))
+
+                # CVE DESCRIPTION EDITED
                 elif self.config.show_cves_descriptions_mode == True:
                     cve_list = self.vulns_db.get_vulnerabilities_of_version_sorted_by_criticity(finding["version"], colors=True, reverse=True)
+
                     for cve_colored, cve_content in cve_list:
+                        ref_cve = None
+
+                        for i in cve_content["references"]:
+                            if "nvd.nist.gov" in i:
+                                ref_cve = i
+
+                        list_for_cve_and_description.append({"Target": f"{finding['target']}:{finding['computer_port']}",
+                                                             "Apache Tomcat Version": f"ApacheTomcat {finding['version']}",
+                                                             "Link to manager": finding["manager_url"],
+                                                             "Credentials": finding["credentials_found"],
+                                                             "CVE": cve_content['cve']['id'],
+                                                             "Criticity": cve_content["cvss"]['criticity'],
+                                                             "Description":cve_content["description"],
+                                                             "Reference": ref_cve})
+
                         print("  | %s: %s" % (cve_colored, cve_content["description"]))
 
+                with open("result.json", 'w', encoding='utf-8') as f:
+                    json.dump(list_for_cve_and_description, f)
+
                 self._new_results.remove(finding)
+
         except Exception as e:
             if self.config.debug_mode:
                 print("[Error in %s] %s" % (__name__, e))

@@ -85,7 +85,7 @@ def try_default_credentials(url_manager, config):
                 proxies=config.request_proxies,
                 verify=(not (config.request_no_check_certificate))
             )
-            if r.status_code in [200, 403]:
+            if 308 < r.status_code <= 200:
                 found_credentials.append((r.status_code, credentials))
         return found_credentials
     except Exception as e:
