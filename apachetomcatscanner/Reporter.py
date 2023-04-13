@@ -66,12 +66,8 @@ class Reporter(object):
                                     prompt = "  | Valid user: \x1b[1;92m%s\x1b[0m | password: \x1b[1;92m%s\x1b[0m"
                                 print(prompt % (creds["username"], creds["password"]))
 
-                else:
-                    if self.config.no_colors:
-                        prompt = "[>] [Apache Tomcat/%s] on %s:%s (manager: not accessible)"
-                    else:
-                        prompt = "[>] [Apache Tomcat/\x1b[1;95m%s\x1b[0m] on \x1b[1;93m%s\x1b[0m:\x1b[1;93m%s\x1b[0m (manager: \x1b[1;91mnot accessible\x1b[0m)\x1b[0m "
-                    print(prompt % (finding["version"], finding["computer_ip"], finding["computer_port"]))
+                elif not finding["manager_accessible"]:
+                    manager_url_info = None
 
                 # List of cves
                 if self.config.list_cves_mode == True and self.config.show_cves_descriptions_mode == False:
@@ -85,23 +81,53 @@ class Reporter(object):
                     cve_list = self.vulns_db.get_vulnerabilities_of_version_sorted_by_criticity(finding["version"], colors=True, reverse=True)
 
                     for cve_colored, cve_content in cve_list:
+
+                        # I'm sorry, Python
+                        target_info = None
+                        if finding['scheme'] and finding['target'] and finding['computer_port']:
+                            target_info = f"{finding['scheme']}://{finding['target']}:{finding['computer_port']}"
+
+                        apache_ver_info = None
+                        if finding['version']:
+                            apache_ver_info = f"ApacheTomcat {finding['version']}"
+
+                        if finding["manager_accessible"]:
+
+                            if not finding["manager_url"]:
+                                manager_url_info = None
+
+                            else:
+                                manager_url_info = finding["manager_url"]
+
+
+                        cred_info = None
+                        if finding["credentials_found"]:
+                            cred_info = finding["credentials_found"]
+
+                        cve_content_info = None
+                        if cve_content['cve']['id']:
+                            cve_content_info = cve_content['cve']['id']
+
+                        severity = None
+                        if cve_content["cvss"]['criticity']:
+                            severity = cve_content["cvss"]['criticity'].lower()
+
+                        cve_description = None
+                        if cve_content["description"]:
+                            cve_description = cve_content["description"]
+
                         ref_cve = None
                         for i in cve_content["references"]:
                             if "nvd.nist.gov" in i:
                                 ref_cve = i
 
-                        if not finding["credentials_found"]:
-                            cred_info = None
-                        else:
-                            cred_info = finding["credentials_found"]
-
-                        list_for_cve_and_description.append({"Target": f"{finding['scheme']}://{finding['target']}:{finding['computer_port']}",
-                                                             "Apache Tomcat Version": f"ApacheTomcat {finding['version']}",
-                                                             "Link to manager": finding["manager_url"],
+                        list_for_cve_and_description.append({"Target": target_info,
+                                                             "Apache Tomcat Version": apache_ver_info,
+                                                             "Link to manager": manager_url_info,
                                                              "Credentials": cred_info,
-                                                             "CVE": cve_content['cve']['id'],
-                                                             "Criticity": cve_content["cvss"]['criticity'].lower(),
-                                                             "Description": cve_content["description"],
+                                                             "CVE": cve_content_info,
+                                                             "Criticity": severity,
+                                                             "Description": cve_description,
                                                              "Reference": ref_cve})
 
                         print("  | %s: %s" % (cve_colored, cve_content["description"]))
