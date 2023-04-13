@@ -86,18 +86,22 @@ class Reporter(object):
 
                     for cve_colored, cve_content in cve_list:
                         ref_cve = None
-
                         for i in cve_content["references"]:
                             if "nvd.nist.gov" in i:
                                 ref_cve = i
 
-                        list_for_cve_and_description.append({"Target": f"{finding['target']}:{finding['computer_port']}",
+                        if not finding["credentials_found"]:
+                            cred_info = None
+                        else:
+                            cred_info = finding["credentials_found"]
+
+                        list_for_cve_and_description.append({"Target": f"{finding['scheme']}://{finding['target']}:{finding['computer_port']}",
                                                              "Apache Tomcat Version": f"ApacheTomcat {finding['version']}",
                                                              "Link to manager": finding["manager_url"],
-                                                             "Credentials": finding["credentials_found"],
+                                                             "Credentials": cred_info,
                                                              "CVE": cve_content['cve']['id'],
-                                                             "Criticity": cve_content["cvss"]['criticity'],
-                                                             "Description":cve_content["description"],
+                                                             "Criticity": cve_content["cvss"]['criticity'].lower(),
+                                                             "Description": cve_content["description"],
                                                              "Reference": ref_cve})
 
                         print("  | %s: %s" % (cve_colored, cve_content["description"]))
