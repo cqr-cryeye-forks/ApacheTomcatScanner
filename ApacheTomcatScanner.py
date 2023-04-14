@@ -6,7 +6,8 @@
 
 
 from apachetomcatscanner.__main__ import main
+from apachetomcatscanner.init_args import options
 
 if __name__ == '__main__':
-    main()
+    main(args_options=options)
 

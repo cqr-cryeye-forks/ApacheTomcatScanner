@@ -6,16 +6,15 @@
 
 import json
 import os.path
-import sqlite3
 import traceback
-import xlsxwriter
+
+from apachetomcatscanner.init_args import options
 
 
 class Reporter(object):
     """
     Documentation for class Reporter
     """
-
     data = {}
 
     def __init__(self, config, vulns_db):
@@ -40,7 +39,7 @@ class Reporter(object):
         self._new_results.append(finding)
 
     def print_new_results(self):
-        global list_for_cve_and_description
+        # global list_for_cve_and_description
         list_for_cve_and_description = []
         try:
             for finding in self._new_results:
@@ -49,7 +48,8 @@ class Reporter(object):
                         prompt = "[>] [Apache Tomcat/%s] on %s:%s (manager: accessible) on %s "
                     else:
                         prompt = "[>] [Apache Tomcat/\x1b[1;95m%s\x1b[0m] on \x1b[1;93m%s\x1b[0m:\x1b[1;93m%s\x1b[0m (manager: \x1b[1;92maccessible\x1b[0m) on \x1b[4;94m%s\x1b[0m "
-                    print(prompt % (finding["version"], finding["computer_ip"], finding["computer_port"], finding["manager_url"]))
+                    print(prompt % (
+                    finding["version"], finding["computer_ip"], finding["computer_port"], finding["manager_url"]))
 
                     if len(finding["credentials_found"]) != 0:
                         for statuscode, creds in finding["credentials_found"]:
@@ -71,14 +71,18 @@ class Reporter(object):
 
                 # List of cves
                 if self.config.list_cves_mode == True and self.config.show_cves_descriptions_mode == False:
-                    cve_list = self.vulns_db.get_vulnerabilities_of_version_sorted_by_criticity(finding["version"], colors=True, reverse=True)
+                    cve_list = self.vulns_db.get_vulnerabilities_of_version_sorted_by_criticity(finding["version"],
+                                                                                                colors=True,
+                                                                                                reverse=True)
                     cve_list = [cve_colored for cve_colored, cve_content in cve_list]
                     if len(cve_list) != 0:
                         print("  | CVEs: %s" % ', '.join(cve_list))
 
                 # CVE DESCRIPTION EDITED
                 elif self.config.show_cves_descriptions_mode == True:
-                    cve_list = self.vulns_db.get_vulnerabilities_of_version_sorted_by_criticity(finding["version"], colors=True, reverse=True)
+                    cve_list = self.vulns_db.get_vulnerabilities_of_version_sorted_by_criticity(finding["version"],
+                                                                                                colors=True,
+                                                                                                reverse=True)
 
                     for cve_colored, cve_content in cve_list:
 
@@ -98,7 +102,6 @@ class Reporter(object):
 
                             else:
                                 manager_url_info = finding["manager_url"]
-
 
                         cred_info = None
                         if finding["credentials_found"]:
@@ -129,8 +132,10 @@ class Reporter(object):
                                                              "Criticity": severity,
                                                              "Description": cve_description,
                                                              "Reference": ref_cve})
+                        s = 1
 
                         print("  | %s: %s" % (cve_colored, cve_content["description"]))
+                self.export_json(path_to_file=options.export_json, content=list_for_cve_and_description)
                 self._new_results.remove(finding)
 
         except Exception as e:
@@ -138,7 +143,7 @@ class Reporter(object):
                 print("[Error in %s] %s" % (__name__, e))
                 traceback.print_exc()
 
-    def export_json(self, path_to_file):
+    def export_json(self, path_to_file, content):
         basepath = os.path.dirname(path_to_file)
         filename = os.path.basename(path_to_file)
         if basepath not in [".", ""]:
@@ -149,6 +154,5 @@ class Reporter(object):
             path_to_file = filename
 
         f = open(path_to_file, 'w')
-        f.write(json.dumps(list_for_cve_and_description))
+        f.write(json.dumps(content))
         f.close()
-
