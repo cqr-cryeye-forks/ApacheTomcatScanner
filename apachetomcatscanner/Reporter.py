@@ -42,10 +42,9 @@ class Reporter(object):
         # global list_for_cve_and_description
         list_for_cve_and_description = []
         try:
-            x = self._new_results
-            if not x:
-                self.export_json(path_to_file=options.export_json, content=list_for_cve_and_description)
             for finding in self._new_results:
+                if not self._new_results:
+                    continue
                 if finding["manager_accessible"]:
                     if self.config.no_colors:
                         prompt = "[>] [Apache Tomcat/%s] on %s:%s (manager: accessible) on %s "
@@ -140,7 +139,7 @@ class Reporter(object):
 
                         print("  | %s: %s" % (cve_colored, cve_content["description"]))
 
-                self.export_json(path_to_file=options.export_json, content=list_for_cve_and_description)
+                export_json(path_to_file=options.export_json, content=list_for_cve_and_description)
                 self._new_results.remove(finding)
 
         except Exception as e:
@@ -148,16 +147,16 @@ class Reporter(object):
                 print("[Error in %s] %s" % (__name__, e))
                 traceback.print_exc()
 
-    def export_json(self, path_to_file, content):
-        basepath = os.path.dirname(path_to_file)
-        filename = os.path.basename(path_to_file)
-        if basepath not in [".", ""]:
-            if not os.path.exists(basepath):
-                os.makedirs(basepath)
-            path_to_file = basepath + os.path.sep + filename
-        else:
-            path_to_file = filename
+def export_json(path_to_file, content):
+    basepath = os.path.dirname(path_to_file)
+    filename = os.path.basename(path_to_file)
+    if basepath not in [".", ""]:
+        if not os.path.exists(basepath):
+            os.makedirs(basepath)
+        path_to_file = basepath + os.path.sep + filename
+    else:
+        path_to_file = filename
 
-        f = open(path_to_file, 'w')
-        f.write(json.dumps(content))
-        f.close()
+    f = open(path_to_file, 'w')
+    f.write(json.dumps(content))
+    f.close()

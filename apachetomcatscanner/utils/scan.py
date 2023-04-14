@@ -10,6 +10,8 @@ import time
 import traceback
 import urllib.parse
 import re
+from apachetomcatscanner.Reporter import export_json
+from apachetomcatscanner.init_args import options
 from apachetomcatscanner.utils.network import is_port_open, is_http_accessible
 import requests
 # Disable warnings of insecure connection for invalid certificates
@@ -207,6 +209,9 @@ def monitor_thread(reporter, config, monitor_data):
         time.sleep(1)
         if rate == 0 and monitor_data["actions_performed"] == monitor_data["total"]:
             monitoring = False
+
+    if reporter.data == {}:
+        export_json(path_to_file=options.export_json, content=[])
 
     if len(reporter._new_results) != 0:
         reporter.print_new_results()
