@@ -42,6 +42,9 @@ class Reporter(object):
         # global list_for_cve_and_description
         list_for_cve_and_description = []
         try:
+            x = self._new_results
+            if not x:
+                self.export_json(path_to_file=options.export_json, content=list_for_cve_and_description)
             for finding in self._new_results:
                 if finding["manager_accessible"]:
                     if self.config.no_colors:
@@ -124,6 +127,7 @@ class Reporter(object):
                             if "nvd.nist.gov" in i:
                                 ref_cve = i
 
+
                         list_for_cve_and_description.append({"Target": target_info,
                                                              "Apache Tomcat Version": apache_ver_info,
                                                              "Link to manager": manager_url_info,
@@ -135,6 +139,7 @@ class Reporter(object):
                         s = 1
 
                         print("  | %s: %s" % (cve_colored, cve_content["description"]))
+
                 self.export_json(path_to_file=options.export_json, content=list_for_cve_and_description)
                 self._new_results.remove(finding)
 
