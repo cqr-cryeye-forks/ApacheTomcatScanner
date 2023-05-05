@@ -7,10 +7,13 @@
 import socket
 
 import requests
+import urllib3
+
 # Disable warnings of insecure connection for invalid certificates
-requests.packages.urllib3.disable_warnings()
+urllib3.disable_warnings()
 # Allow use of deprecated and weak cipher methods
-requests.packages.urllib3.util.ssl_.DEFAULT_CIPHERS += ':HIGH:!DH:!aNULL'
+# urllib3.util.ssl_.DEFAULT_CIPHERS += ':HIGH:!DH:!aNULL'
+urllib3.util.ssl_.create_urllib3_context(ciphers=':HIGH:!DH:!aNULL')
 try:
     requests.packages.urllib3.contrib.pyopenssl.util.ssl_.DEFAULT_CIPHERS += ':HIGH:!DH:!aNULL'
 except AttributeError:
