@@ -10,6 +10,9 @@ import time
 import traceback
 import urllib.parse
 import re
+
+import urllib3
+
 from apachetomcatscanner.Reporter import export_json
 from apachetomcatscanner.init_args import options
 from apachetomcatscanner.utils.network import is_port_open, is_http_accessible
@@ -17,7 +20,8 @@ import requests
 # Disable warnings of insecure connection for invalid certificates
 requests.packages.urllib3.disable_warnings()
 # Allow use of deprecated and weak cipher methods
-requests.packages.urllib3.util.ssl_.DEFAULT_CIPHERS += ':HIGH:!DH:!aNULL'
+# requests.packages.urllib3.util.ssl_.DEFAULT_CIPHERS += ':HIGH:!DH:!aNULL'
+urllib3.util.ssl_.create_urllib3_context(ciphers=':HIGH:!DH:!aNULL')
 try:
     requests.packages.urllib3.contrib.pyopenssl.util.ssl_.DEFAULT_CIPHERS += ':HIGH:!DH:!aNULL'
 except AttributeError:
